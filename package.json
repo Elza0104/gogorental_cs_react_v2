@@ -1,0 +1,64 @@
+{
+  "name": "gogorental_cs_react",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@material-ui/core": "^4.12.4",
+    "@material-ui/styles": "^4.11.5",
+    "@mui/icons-material": "^5.16.0",
+    "@mui/x-data-grid": "^7.11.0",
+    "@mui/x-date-pickers": "^7.11.0",
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "@types/jest": "^27.5.2",
+    "@types/js-cookie": "^3.0.6",
+    "@types/node": "^16.18.101",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@types/react-router-dom": "^5.3.3",
+    "actionsheet-react": "^1.0.14",
+    "axios": "^1.7.2",
+    "crypto-js": "^4.2.0",
+    "date-fns": "^3.6.0",
+    "dayjs": "^1.11.12",
+    "dotenv": "^16.4.5",
+    "js-cookie": "^2.2.1",
+    "react": "^18.3.1",
+    "react-cookie": "^7.2.0",
+    "react-dom": "^18.3.1",
+    "react-moment": "^1.1.3",
+    "react-router-dom": "^6.28.1",
+    "react-scripts": "5.0.1",
+    "recoil": "^0.7.7",
+    "typescript": "^4.9.5",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@types/crypto-js": "^4.2.2"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "고고렌탈 센터 관리자",
+  "short_name": "고고렌탈 센터", 
+  "icons": [
+    {
+      "src": "/android-icon-36x36.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#111111",
+  "background_color": "#ffffff"
+}
