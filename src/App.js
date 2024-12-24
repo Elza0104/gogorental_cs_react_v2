@@ -6,6 +6,7 @@ import MobileMainPage from "./pages/MobileMainPage";
 import MobileCtrDetailPage from "./pages/MobileCtrDetailPage"
 import PasswordChaegePage from './pages/PasswordChaegePage';
 import MobileBikeReturnPage from './pages/MobileBikeReturnPage';
+import CtrDetailPage from './pages/CtrDetailPage';
 
 function App() {
   function setScreenSize(){
@@ -19,6 +20,7 @@ function App() {
   return (
       <Routes>
         <Route path='main' element={<MainPage/>}></Route>
+        <Route path='main/ctrdetail' element={<CtrDetailPage/>}></Route>
         <Route path='/' element={<LoginPage/>}></Route>
         <Route path='mobile' element={<MobileMainPage/>}></Route>
         <Route path='mobile/ctrdetail' element={<MobileCtrDetailPage/>}></Route>

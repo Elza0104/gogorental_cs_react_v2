@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { getAxios, LoginAxios } from "../hooks/Axiosinstance";
-import { BasicButton } from "../component/basic/button/basicButton";
+import { BasicButton } from "../component/button/basicButton";
 import { useNavigate } from "react-router-dom";
 import Layout from "../component/layout/main";
 import { SingleBtnDialog } from "../component/basic/dialog/singleBtnDialog";
@@ -42,7 +42,6 @@ const LoginPage = () => {
         //console.log(temp)
         const logindata = await LoginAxios(`auth/login`, temp);
         if (logindata.status === 200) {
-          console.log(logindata)
           sessionStorage.setItem(
             "accessToken",
             logindata.data.data.jwt
