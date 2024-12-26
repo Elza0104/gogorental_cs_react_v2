@@ -17,32 +17,31 @@ import {
   useGridSelector,
   GridColDef,
 } from "@mui/x-data-grid";
-import { useMediaQuery } from "@material-ui/core";
 import { getAxios, postAxios, bikeReturnAxios } from "../hooks/Axiosinstance";
 import PaginationItem from "@mui/material/PaginationItem";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { formatDateTime } from "../util";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { formatDateTime, formatDayjs } from "../util";
+import dayjs from "dayjs";
 
 const mainlogo = require("../assets/img/mainlogo.png");
 
 const MainPage = () => {
   const navigate = useNavigate();
-  // navigate("/login");
+
+  
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const [bikedata, setBikedata] = useState([]);
-  const [rentalPopup, setRentalPopup] = useState<boolean>(false);
-  const [bikeReturnPopup, setBikeReturnPopup] = useState<boolean>(false);
-  const [rentalbikeCtr, setrentalbikeCtr] = useState({
-    id: "",
-    ctrStartTime: "",
-    ctrEndTime: "",
-    amount: "",
-    userDTO: {
-      name: "",
-      phoneNumber: "",
-    },
-  });
+
+  const [agencyName, setAgencyName] = useState("all");
+  const [ctrStatus, setCtrStatus] = useState("all");
+  const [userName, setUserName] = useState("");
+  const [userPhoneNum, setUserPhoneNum] = useState("");
+  const [bikeNum, setBikeNum] = useState("");
+
+  const [agencyNameSelect, setAgencyNameSelect] = useState([]);
+  const [ctrStatusSelect, setCtrStatusSelect] = useState([]);
 
   const columns: GridColDef[] = [
     {
@@ -103,9 +102,6 @@ const MainPage = () => {
       },
     },
   ];
-  const pop = (e: any) => {
-    return "rgb(120, 52, 137)";
-  };
   const bikeStatusLabel = (status: any) => {
     if (status == "3") {
       return "운행중";
@@ -134,17 +130,6 @@ const MainPage = () => {
       ));
     console.log(rentalbikeCtr)
   };*/
-
-  const rental = async (ctrid: any) => {
-    try {
-      const response = await postAxios(`admin/rental?contractId=${ctrid}`);
-
-      //console.log('Upload successful:', response.data);
-    } catch (error) {
-      //console.error('Error uploading the image:', error);
-    }
-  };
-
   function ctrDetailFn(id: any) {
     navigate("/main/ctrdetail", {
       state: {
@@ -153,48 +138,6 @@ const MainPage = () => {
     });
   }
 
-  function convertTime(date: any) {
-    if (date != undefined) {
-      let sd = new Date(date);
-      const year = sd.getFullYear();
-      const month = ("0" + (sd.getMonth() + 1)).slice(-2);
-      const day = ("0" + sd.getDate()).slice(-2);
-      const hour = ("0" + sd.getHours()).slice(-2);
-      const minute = ("0" + sd.getMinutes()).slice(-2);
-      const second = ("0" + sd.getSeconds()).slice(-2);
-      const dateStr = `${year}-${month}-${day} ${hour}:${minute}:${second}`;
-      return dateStr;
-    }
-    return "";
-  }
-  const rentalbikeNowCtr = (params: any) => {
-    setrentalbikeCtr({
-      id: "",
-      ctrStartTime: "",
-      ctrEndTime: "",
-      amount: "",
-      userDTO: {
-        name: "",
-        phoneNumber: "",
-      },
-    });
-    /*params.forEach((e:any) =>(
-        compareTime(e.ctrStartTime, e.ctrEndTime, e),
-        console.log(e.id)
-      ));
-    console.log(rentalbikeCtr)*/
-  };
-  function ctrIdFn(e: any, a: any): String {
-    /*let last = e[e.length - 1];
-    console.log(e)
-    console.log(a)
-    console.log(last)
-    if(last){
-      return last.id;
-    }
-    else*/
-    return "";
-  }
   function CustomPagination() {
     const apiRef = useGridApiContext();
     const page = useGridSelector(apiRef, gridPageSelector);
@@ -250,13 +193,62 @@ const MainPage = () => {
     }
     return result;
   };
-  const convertPrice = (e: any) => {
-    return e.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " 원";
+
+  const resetSearch = () => {
+    setAgencyName("all");
+    setCtrStatus("all");
+    setUserName("");
+    setUserPhoneNum("");
+    setBikeNum("");
+  }
+  const agencyLoading = async () => {
+    try {
+      await getAxios(`cs/getAgency?`).then((response) => {
+        const array = response.data.data;
+
+        setAgencyNameSelect(array);
+      });
+    } catch (err: any) {
+      console.log(err);
+    }
+  };
+
+  const ctrStatusloading = async () => {
+    try {
+      await getAxios(`cs/getContractStatus?`).then((response) => {
+        const array = response.data.data;
+
+        setCtrStatusSelect(array);
+      });
+    } catch (err: any) {
+      console.log(err);
+    }
   };
 
   const allBikeloading = async () => {
     try {
-      await getAxios(`agency/getContracts?`).then((response) => {
+
+      const params = new URLSearchParams();
+
+      if (agencyName !== "all" && agencyName) {
+        params.append('paramAgencyIds', agencyName);
+      }
+      if (ctrStatus !== "all" && ctrStatus) {
+        params.append('status', ctrStatus);
+      }
+      if (userName) {
+        params.append('name', userName);
+      }
+      if (userPhoneNum) {
+        params.append('phoneNumber', userPhoneNum);
+      }
+      if (bikeNum) {
+        params.append('bikeNumber', bikeNum);
+      }
+      await getAxios(`agency/getContracts?${params.toString()}`
+                                          +`&page=0&size=50`
+                                          +`&startDate=${formatDayjs(dayjs().subtract(3, "month"))}`
+                                          +`&endDate=${formatDayjs(dayjs().add(1, "year"))}`).then((response) => {
         const array = response.data.data.content.map((val: any, idx: any) => ({
           id: val.id,
           agcyNm: val.agencyName,
@@ -273,57 +265,6 @@ const MainPage = () => {
       console.log(err);
     }
   };
-  const bikeReturn = async () => {
-    const formData1 = new FormData();
-    const formData2 = new FormData();
-    const formData3 = new FormData();
-    const formData4 = new FormData();
-
-    const w1: any = document.getElementById("imageInput1");
-    const w2: any = document.getElementById("imageInput2");
-    const w3: any = document.getElementById("imageInput3");
-    const w4: any = document.getElementById("imageInput4");
-
-    const q1 = w1.files[0];
-    const q2 = w2.files[0];
-    const q3 = w3.files[0];
-    const q4 = w4.files[0];
-
-    formData1.append("photo1", q1);
-    formData1.append("photo2", q2);
-    formData2.append("description", "Uploaded photo");
-    formData1.append("photo3", q3);
-    formData3.append("description", "Uploaded photo");
-    formData1.append("photo4", q4);
-    formData4.append("description", "Uploaded photo");
-    if (rentalbikeCtr.id) {
-      try {
-        const response = await bikeReturnAxios(
-          `admin/bike-return?contractId=${rentalbikeCtr.id}`,
-          formData1
-        );
-        //console.log('Upload successful:', response.data);
-      } catch (error) {
-        console.error("Error uploading the image:", error);
-      }
-    }
-  };
-  function resetCtrdata() {
-    const array = [];
-    // setCtrdata(null);
-  }
-  const [state, setState] = useState({});
-  const hello = async (e: any, inputIndex: any) => {
-    //console.log(typeof(e))
-    //console.log(e.target.files[0])
-    const src = window.URL.createObjectURL(e.target.files[0]);
-    //console.log(typeof(src))
-  };
-  const PAGE_SIZE = 5;
-  const [paginationModel, setPaginationModel] = useState({
-    pageSize: PAGE_SIZE,
-    page: 0,
-  });
   const logout = () => {
     sessionStorage.clear();
     localStorage.clear();
@@ -331,10 +272,12 @@ const MainPage = () => {
   };
   useEffect(() => {
     allBikeloading();
+    agencyLoading();
+    ctrStatusloading();
   }, []);
   return (
     <Box>
-      <Box minWidth="930px">
+      <Box minWidth="1400px">
         <Box display="flex" justifyContent="space-between" m={2}>
           <Box>
             <img src={mainlogo} width={"120px"}></img>
@@ -359,89 +302,110 @@ const MainPage = () => {
           border="1px solid #bdbdbd"
           display={"flex"}
         >
-          <Box display={"flex"} justifyContent="center" width="80%">
-            {/* <Box my={2} display={"flex"} alignItems={"center"}>
-              <Typography
-                color="rgb(120, 52, 137)"
-                className="bold"
-                fontSize="1rem"
-                pr={1}
-              >
-                제조사
+          <Box display={"flex"} justifyContent="center" width="80%" my={1}>
+            <Box ml={3} alignItems={"center"}>
+              <Typography className="bold" fontSize="15px" pb={1}>
+                센터명
               </Typography>
               <FormControl
-                variant="standard"
-                color="primary"
+                variant="outlined"
                 sx={{
-                  width: "120px",
+                  width: "220px",
                 }}
               >
-                <Select color="primary" defaultValue={"01"}>
-                  <MenuItem value="01">1342</MenuItem>
-                  <MenuItem value="02">혼다</MenuItem>
-                  <MenuItem value="03">기타</MenuItem>
+                <Select
+                  color="primary"
+                  defaultValue={"all"}
+                  sx={{ height: "55px", borderRadius: "10px" }}
+                  value={agencyName}
+                  onChange={(e) => setAgencyName(e.target.value)}
+                >
+                  <MenuItem value="all">전체</MenuItem>
+                  {agencyNameSelect.map((val: any, idx: any) => {
+                    return (
+                      <MenuItem key={idx} value={val.id}>
+                        {val.agencyName}
+                      </MenuItem>
+                    );
+                  })}
                 </Select>
               </FormControl>
             </Box>
-            <Box my={2} ml={3} display={"flex"} alignItems={"center"}>
-              <Typography
-                color="rgb(120, 52, 137)"
-                className="bold"
-                fontSize="1rem"
-                pr={1}
+            <Box ml={3} alignItems={"center"}>
+              <Typography className="bold" fontSize="15px" pb={1}>
+                대여상태
+              </Typography>
+              <FormControl
+                variant="outlined"
+                sx={{
+                  width: "180px",
+                }}
               >
-                모델명
+                <Select
+                  color="primary"
+                  defaultValue={"all"}
+                  sx={{ height: "55px", borderRadius: "10px" }}
+                  value={ctrStatus}
+                  onChange={(e) => setCtrStatus(e.target.value)}
+                >
+                  <MenuItem value="all">전체</MenuItem>
+                  {Object.entries(ctrStatusSelect).map(([key, value]) => (
+                    <MenuItem key={key} value={value}>
+                      {value}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+            <Box ml={3} alignItems={"center"}>
+              <Typography className="bold" fontSize="15px" pb={1}>
+                예약자명
               </Typography>
               <TextField
+                InputProps={{ sx: { borderRadius: "10px" } }}
                 style={{
                   width: "120px",
                 }}
-                placeholder="예: PCX125"
+                placeholder="예: 홍길동"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
               />
             </Box>
-            <Box my={2} ml={3} display={"flex"} alignItems={"center"}>
-              <Typography
-                color="rgb(120, 52, 137)"
-                className="bold"
-                fontSize="1rem"
-                pr={1}
-              >
+            <Box ml={3} alignItems={"center"}>
+              <Typography className="bold" fontSize="15px" pb={1}>
+                휴대폰번호
+              </Typography>
+              <TextField
+                InputProps={{ sx: { borderRadius: "10px" } }}
+                style={{
+                  width: "170px",
+                  fontSize: "16px",
+                }}
+                placeholder="예: 01012345678"
+                value={userPhoneNum}
+                onChange={(e) => setUserPhoneNum(e.target.value)}
+              />
+            </Box>
+            <Box ml={3} alignItems={"center"}>
+              <Typography className="bold" fontSize="15px" pb={1}>
                 차량번호
               </Typography>
               <TextField
+                InputProps={{ sx: { borderRadius: "10px" } }}
                 style={{
-                  width: "150px",
+                  width: "170px",
                 }}
                 placeholder="예: 서울길동홍1234"
+                value={bikeNum}
+                onChange={(e) => setBikeNum(e.target.value)}
               />
             </Box>
-            <Box my={2} ml={3} display={"flex"} alignItems={"center"}>
-              <Typography
-                color="rgb(120, 52, 137)"
-                className="bold"
-                fontSize="1rem"
-                pr={1}
-              >
-                차량상태
-              </Typography>
-              <FormControl
-                variant="standard"
-                sx={{
-                  width: "120px",
-                }}
-              >
-                <Select color="primary" defaultValue={"01"}>
-                  <MenuItem value="01">야마하</MenuItem>
-                  <MenuItem value="02">혼다</MenuItem>
-                  <MenuItem value="03">기타</MenuItem>
-                </Select>
-              </FormControl>
-            </Box> */}
           </Box>
           <Box
             width="20%"
             display="flex"
             justifyContent={"flex-start"}
+            alignItems={"center"}
             py={1.7}
           >
             <Button
@@ -456,7 +420,7 @@ const MainPage = () => {
             <Box pl={3}>
               <Button
                 variant="outlined"
-                onClick={() => allBikeloading()}
+                onClick={() => resetSearch()}
                 sx={{ borderRadius: "13px", width: "100px", height: "50px" }}
               >
                 <Box fontWeight={"700"} fontSize={"16px"}>
@@ -466,12 +430,7 @@ const MainPage = () => {
             </Box>
           </Box>
         </Box>
-        <Box
-          m={3}
-          p={3}
-          borderRadius="8px"
-          border="1px solid #bdbdbd"
-        >
+        <Box m={3} p={3} borderRadius="8px" border="1px solid #bdbdbd">
           <DataGrid
             autoHeight
             columns={columns}
@@ -486,7 +445,7 @@ const MainPage = () => {
               pagination: CustomPagination,
             }}
             sx={{
-              marginX: "30px",
+              marginX: "10px",
               border: "1px solid #FFFFFF",
               backgroundColor: "#FFFFFF",
               ".MuiDataGrid-columnHeaderTitle": {

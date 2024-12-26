@@ -24,3 +24,14 @@ export function extractBirthDateFromId(id: string): string {
 
   return `${year}-${month}-${day}`;
 }
+
+export const formatDayjs = (date: any) => {
+  if (date !== undefined && date != null) {
+    let i = new Date(date);
+    const year = i.getFullYear();
+    const month = ("0" + (i.getMonth() + 1)).slice(-2);
+    const day = ("0" + i.getDate()).slice(-2);
+    return `${year}-${month}-${day} 00:00:00`;
+  }
+  return "";
+}
