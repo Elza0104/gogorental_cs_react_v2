@@ -17,11 +17,17 @@ import {
   useGridSelector,
   GridColDef,
 } from "@mui/x-data-grid";
-import { getAxios, postAxios, bikeReturnAxios } from "../hooks/Axiosinstance";
+import { getAxios } from "../hooks/Axiosinstance";
 import PaginationItem from "@mui/material/PaginationItem";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { formatDateTime, formatDayjs } from "../util";
+import {
+  extractBirthDateFromId,
+  formatDate,
+  formatDateTime,
+  formatDayjs,
+  formatPhoneNumber,
+} from "../util";
 import dayjs from "dayjs";
 
 const mainlogo = require("../assets/img/mainlogo.png");
@@ -29,8 +35,7 @@ const mainlogo = require("../assets/img/mainlogo.png");
 const MainPage = () => {
   const navigate = useNavigate();
 
-  
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [bikedata, setBikedata] = useState([]);
 
@@ -45,8 +50,29 @@ const MainPage = () => {
 
   const columns: GridColDef[] = [
     {
+      field: "insDtm",
+      headerName: "등록일자",
+      headerAlign: "center",
+      align: "center",
+      flex: 1,
+    },
+    {
       field: "agcyNm",
       headerName: "센터명",
+      headerAlign: "center",
+      align: "center",
+      flex: 1,
+    },
+    {
+      field: "bikeModel",
+      headerName: "모델명",
+      headerAlign: "center",
+      align: "center",
+      flex: 1,
+    },
+    {
+      field: "bikeNumber",
+      headerName: "차량번호",
       headerAlign: "center",
       align: "center",
       flex: 1,
@@ -59,8 +85,15 @@ const MainPage = () => {
       flex: 1,
     },
     {
+      field: "ssn",
+      headerName: "생년월일",
+      headerAlign: "center",
+      align: "center",
+      flex: 1,
+    },
+    {
       field: "phoneNm",
-      headerName: "휴대폰 번호",
+      headerName: "휴대폰번호",
       headerAlign: "center",
       align: "center",
       flex: 1,
@@ -80,6 +113,20 @@ const MainPage = () => {
       flex: 1,
     },
     {
+      field: "amount",
+      headerName: "결제액",
+      headerAlign: "center",
+      align: "center",
+      flex: 1,
+    },
+    {
+      field: "id",
+      headerName: "계약 id",
+      headerAlign: "center",
+      align: "center",
+      flex: 1,
+    },
+    {
       field: "searchRental",
       headerName: "계약 상세보기",
       headerAlign: "center",
@@ -94,42 +141,15 @@ const MainPage = () => {
             variant="contained"
             sx={{
               borderRadius: "30px",
+              width: "100px",
             }}
           >
-            계약 보기
+            {params.row.contractStatus}
           </Button>
         );
       },
     },
   ];
-  const bikeStatusLabel = (status: any) => {
-    if (status == "3") {
-      return "운행중";
-    } else if (status == "2") {
-      return "출고대기";
-    } else if (status == "1") {
-      return "계약완료";
-    } else if (status == "4") {
-      return "계약종료";
-    }
-    return "오류";
-  };
-  /*const rentalDataLoading = (params: any) => {
-    setrentalbikeCtr({
-      id: '',
-      ctrStartTime:'',
-      ctrEndTime:'',
-      amount:'',
-      userDTO:{
-        name:'',
-        phoneNumber: '',
-      },
-    })
-      params.forEach((e:any) =>(
-        compareTime(e.ctrStartTime, e.ctrEndTime, e)
-      ));
-    console.log(rentalbikeCtr)
-  };*/
   function ctrDetailFn(id: any) {
     navigate("/main/ctrdetail", {
       state: {
@@ -160,39 +180,6 @@ const MainPage = () => {
       </Box>
     );
   }
-  const rentalStatus = (e: any): String => {
-    const currentDate = new Date();
-    let result: String = "계약없음";
-
-    if (e != null) {
-      /*if(e.length != 0){
-        
-        for(let i=0; e.length-1; i++) {    
-          const startTime = new Date(e[i].ctrStartTime);
-          const endTime = new Date(e[i].ctrEndTime);
-        
-          if(currentDate <= endTime) {
-            if(e[i].bikeInOutDTO == null) {
-              return "출고대기";
-            } else if(e[i].bikeInOutDTO.inTime == null) {
-              return  "렌탈중"
-            }
-            else{
-              return '오류'
-            }
-          } else if(currentDate < startTime) {
-            return  "렌탈대기"
-          } 
-          else{
-            return '오류'
-          }
-        }
-      }*/
-    } else {
-      return "계약없음";
-    }
-    return result;
-  };
 
   const resetSearch = () => {
     setAgencyName("all");
@@ -200,7 +187,7 @@ const MainPage = () => {
     setUserName("");
     setUserPhoneNum("");
     setBikeNum("");
-  }
+  };
   const agencyLoading = async () => {
     try {
       await getAxios(`cs/getAgency?`).then((response) => {
@@ -227,36 +214,42 @@ const MainPage = () => {
 
   const allBikeloading = async () => {
     try {
-
       const params = new URLSearchParams();
 
       if (agencyName !== "all" && agencyName) {
-        params.append('paramAgencyIds', agencyName);
+        params.append("paramAgencyIds", agencyName);
       }
       if (ctrStatus !== "all" && ctrStatus) {
-        params.append('status', ctrStatus);
+        params.append("status", ctrStatus);
       }
       if (userName) {
-        params.append('name', userName);
+        params.append("name", userName);
       }
       if (userPhoneNum) {
-        params.append('phoneNumber', userPhoneNum);
+        params.append("phoneNumber", userPhoneNum);
       }
       if (bikeNum) {
-        params.append('bikeNumber', bikeNum);
+        params.append("bikeNumber", bikeNum);
       }
-      await getAxios(`agency/getContracts?${params.toString()}`
-                                          +`&page=0&size=50`
-                                          +`&startDate=${formatDayjs(dayjs().subtract(3, "month"))}`
-                                          +`&endDate=${formatDayjs(dayjs().add(1, "year"))}`).then((response) => {
+      await getAxios(
+        `agency/getContracts?${params.toString()}` +
+          `&page=0&size=1000` +
+          `&startDate=${formatDayjs(dayjs().subtract(3, "month"))}` +
+          `&endDate=${formatDayjs(dayjs().add(1, "year"))}`
+      ).then((response) => {
         const array = response.data.data.content.map((val: any, idx: any) => ({
           id: val.id,
           agcyNm: val.agencyName,
+          insDtm: formatDate(val.insDtm),
           name: val.customerName,
-          phoneNm: val.customerPhone,
+          phoneNm: formatPhoneNumber(val.customerPhone),
           amount: val.amount,
           ctrStartTime: formatDateTime(val.ctrStartTime),
           ctrEndTime: formatDateTime(val.ctrEndTime),
+          contractStatus: val.contractStatus,
+          ssn: extractBirthDateFromId(val.customerSsn),
+          bikeModel: val.bikeModel,
+          bikeNumber: val.bikeNumber,
         }));
 
         setBikedata(array);
@@ -432,18 +425,21 @@ const MainPage = () => {
         </Box>
         <Box m={3} p={3} borderRadius="8px" border="1px solid #bdbdbd">
           <DataGrid
-            autoHeight
+            rowHeight={50}
             columns={columns}
             rows={bikedata}
-            disableColumnFilter
-            disableColumnSorting
-            disableColumnResize
-            disableColumnMenu
-            showColumnVerticalBorder
-            disableRowSelectionOnClick
-            slots={{
-              pagination: CustomPagination,
+            initialState={{
+              pagination: { paginationModel: { pageSize: 12 } },
             }}
+            // disableColumnFilter
+            // disableColumnSorting
+            // disableColumnResize
+            // disableColumnMenu
+            // showColumnVerticalBorder
+            // disableRowSelectionOnClick
+            // slots={{
+            //   pagination: CustomPagination,
+            // }}
             sx={{
               marginX: "10px",
               border: "1px solid #FFFFFF",

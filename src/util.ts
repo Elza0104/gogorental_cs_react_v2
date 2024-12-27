@@ -11,18 +11,30 @@ export function formatDateTime(input: any): string {
   return "오류"
 }
 
+export function formatDate(input: any): string {
+  if(input != null && input != undefined){
+    const [date, time] = input.split('T'); // 날짜와 시간을 분리
+    return `${date}`;
+  }
+  return "오류"
+}
+
 export function extractBirthDateFromId(id: string): string {
-  if (!/^\d{6}-\d{7}$/.test(id)) {
-    throw new Error("Invalid 주민등록번호 format. Expected 'XXXXXX-XXXXXXX'.");
+  if (!/^\d{13}$/.test(id)) {
+    console.log("Invalid 주민등록번호 format. Expected 'XXXXXXXXXXXXX'.")
+    return "";
+    
   }
 
-  const [front, back] = id.split('-');
-  const yearPrefix = back[0] === '1' || back[0] === '2' ? '19' : '20';
-  const year = yearPrefix + front.slice(0, 2);
+  const front = id.slice(0, 6);
+  const back = id.slice(6);
+
+  // const yearPrefix = back[0] === '1' || back[0] === '2' ? '19' : '20';
+  const year = front.slice(0, 2);
   const month = front.slice(2, 4);
   const day = front.slice(4, 6);
 
-  return `${year}-${month}-${day}`;
+  return `${year}${month}${day}`;
 }
 
 export const formatDayjs = (date: any) => {
@@ -34,4 +46,23 @@ export const formatDayjs = (date: any) => {
     return `${year}-${month}-${day} 00:00:00`;
   }
   return "";
+}
+
+export function formatPhoneNumber(phoneNumber: string): string {
+  // 숫자만 추출
+  const cleaned = phoneNumber.replace(/[^0-9]/g, "");
+
+  // 유효성 검사 (한국 휴대폰 번호)
+  if (!/^01[016789][0-9]{7,8}$/.test(cleaned)) {
+    return "유효하지 않은 휴대폰 번호입니다.";
+  }
+
+  // 형식화: 000-0000-0000 또는 000-000-0000
+  if (cleaned.length === 10) {
+    return cleaned.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3");
+  } else if (cleaned.length === 11) {
+    return cleaned.replace(/(\d{3})(\d{4})(\d{4})/, "$1-$2-$3");
+  } else {
+    return "유효하지 않은 휴대폰 번호입니다.";
+  }
 }
