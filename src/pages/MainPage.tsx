@@ -22,7 +22,7 @@ import PaginationItem from "@mui/material/PaginationItem";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  extractBirthDateFromId,
+  formatBirth6th,
   formatDate,
   formatDateTime,
   formatDayjs,
@@ -247,7 +247,7 @@ const MainPage = () => {
           ctrStartTime: formatDateTime(val.ctrStartTime),
           ctrEndTime: formatDateTime(val.ctrEndTime),
           contractStatus: val.contractStatus,
-          ssn: extractBirthDateFromId(val.customerSsn),
+          ssn: formatBirth6th(val.customerSsn),
           bikeModel: val.bikeModel,
           bikeNumber: val.bikeNumber,
         }));
